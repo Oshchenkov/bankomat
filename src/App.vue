@@ -108,10 +108,6 @@ export default {
         checkCashWithdrawal() {
             if (Number.isInteger(+this.inputCurrencyValue)) {
                 this.hasError = false;
-                console.log(
-                    'this.calculateWithdrawalCount()',
-                    this.calculateWithdrawalCount()
-                );
             } else {
                 this.hasError = true;
             }
@@ -125,17 +121,31 @@ export default {
                         this.operationCashe.currentSum /
                             this.currencyData[i].value
                     );
-                    console.log('resCount', resCount);
 
-                    if (resCount && resCount <= this.currencyData[i].count) {
-                        this.operationCashe.currentSum =
-                            this.operationCashe.currentSum -
+                    if (resCount <= this.currencyData[i].count) {
+                        this.operationCashe.currentSum -=
                             resCount * this.currencyData[i].value;
 
                         this.operationCashe.operationCounts.push({
                             id: this.currencyData[i].id,
                             value: this.currencyData[i].value,
                             countWithdrawal: resCount,
+                        });
+                    } else if (resCount == 0) {
+                        if (this.operationCashe.currentSum) {
+                            break;
+                        } else {
+                            continue;
+                        }
+                    } else {
+                        this.operationCashe.currentSum -=
+                            this.currencyData[i].count *
+                            this.currencyData[i].value;
+
+                        this.operationCashe.operationCounts.push({
+                            id: this.currencyData[i].id,
+                            value: this.currencyData[i].value,
+                            countWithdrawal: this.currencyData[i].count,
                         });
                     }
                 }
@@ -148,7 +158,7 @@ export default {
                 this.subtractWithdrawalCount();
             } else {
                 this.hasError = true;
-                // this.cleanWithdrawalCountCashe();
+                this.cleanWithdrawalCountCashe();
             }
         },
 
