@@ -108,6 +108,8 @@ export default {
         checkCashWithdrawal() {
             if (Number.isInteger(+this.inputCurrencyValue)) {
                 this.hasError = false;
+
+                this.calculateWithdrawalCount();
             } else {
                 this.hasError = true;
             }
