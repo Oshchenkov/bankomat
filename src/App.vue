@@ -1,37 +1,17 @@
 <template>
     <div id="app">
-        <b-container class="bv-example-row">
-            <b-row>
-                <b-col class="mb-3"
-                    ><b-table
-                        striped
-                        hover
-                        :items="currencyData"
-                        :fields="fields"
-                    ></b-table
-                ></b-col>
-            </b-row>
-            <b-row>
-                <b-col class="mb-3">
-                    <b-form-input
-                        v-model="inputCurrencyValue"
-                        type="number"
-                        placeholder="Enter your value"
-                    ></b-form-input>
-                </b-col>
-                <b-col class="mb-3">
-                    <b-button
-                        :disabled="!inputCurrencyValue"
-                        @click="checkCashWithdrawal"
-                        variant="success"
-                        >Button</b-button
-                    >
-                </b-col>
-            </b-row>
+        <b-container>
+            <h1 class="my-5">
+                Bankomat
+            </h1>
         </b-container>
+        <CurrencyTable :items="currencyData" :fields="fields" />
+        <FormBlock v-model="inputCurrencyValue" @submit="checkCashWithdrawal" />
+
         <div class="error" v-show="hasError">
             Error
         </div>
+        <ToastAlerts />
     </div>
 </template>
 
@@ -40,12 +20,21 @@ import Vue from 'vue';
 import { BootstrapVue } from 'bootstrap-vue';
 import 'bootstrap/dist/css/bootstrap.css';
 import 'bootstrap-vue/dist/bootstrap-vue.css';
+import CurrencyTable from './components/CurrencyTable';
+import FormBlock from './components/FormBlock';
+import ToastAlerts from './components/ToastAlerts';
 
 Vue.use(BootstrapVue);
 
 export default {
     name: 'App',
-    components: {},
+
+    components: {
+        CurrencyTable,
+        FormBlock,
+        ToastAlerts,
+    },
+
     data() {
         return {
             inputCurrencyValue: null,
@@ -60,7 +49,7 @@ export default {
                     key: 'count',
                     label: 'Current count',
                     sortable: true,
-                    variant: 'success',
+                    // variant: 'success',
                 },
             ],
 
@@ -107,11 +96,11 @@ export default {
     methods: {
         checkCashWithdrawal() {
             if (Number.isInteger(+this.inputCurrencyValue)) {
-                this.hasError = false;
+                this.toggleError(false);
 
                 this.calculateWithdrawalCount();
             } else {
-                this.hasError = true;
+                this.toggleError(true);
             }
         },
         calculateWithdrawalCount() {
@@ -125,10 +114,12 @@ export default {
                     );
 
                     if (resCount <= this.currencyData[i].count) {
-                        this.operationCashe.currentSum -=
-                            resCount * this.currencyData[i].value;
+                        this.updateOperationCurrentSum({
+                            count: resCount,
+                            value: this.currencyData[i].value,
+                        });
 
-                        this.operationCashe.operationCounts.push({
+                        this.addOperationCount({
                             id: this.currencyData[i].id,
                             value: this.currencyData[i].value,
                             countWithdrawal: resCount,
@@ -136,15 +127,15 @@ export default {
                     } else if (resCount == 0) {
                         if (this.operationCashe.currentSum) {
                             break;
-                        } else {
-                            continue;
                         }
+                        continue;
                     } else {
-                        this.operationCashe.currentSum -=
-                            this.currencyData[i].count *
-                            this.currencyData[i].value;
+                        this.updateOperationCurrentSum({
+                            count: this.currencyData[i].count,
+                            value: this.currencyData[i].value,
+                        });
 
-                        this.operationCashe.operationCounts.push({
+                        this.addOperationCount({
                             id: this.currencyData[i].id,
                             value: this.currencyData[i].value,
                             countWithdrawal: this.currencyData[i].count,
@@ -153,15 +144,19 @@ export default {
                 }
             }
 
-            if (
-                this.operationCashe.operationCounts.length &&
-                !this.operationCashe.currentSum
-            ) {
-                this.subtractWithdrawalCount();
-            } else {
-                this.hasError = true;
-                this.cleanWithdrawalCountCashe();
-            }
+            this.showWithdrawalResult();
+        },
+
+        updateOperationCurrentSum({ count, value }) {
+            this.operationCashe.currentSum -= count * value;
+        },
+
+        addOperationCount({ id, value, countWithdrawal }) {
+            this.operationCashe.operationCounts.push({
+                id,
+                value,
+                countWithdrawal,
+            });
         },
 
         subtractWithdrawalCount() {
@@ -179,6 +174,22 @@ export default {
 
         cleanWithdrawalCountCashe() {
             this.operationCashe.operationCounts = [];
+        },
+
+        toggleError(status = false) {
+            this.hasError = status;
+        },
+
+        showWithdrawalResult() {
+            if (
+                this.operationCashe.operationCounts.length &&
+                !this.operationCashe.currentSum
+            ) {
+                this.subtractWithdrawalCount();
+            } else {
+                this.toggleError(true);
+                this.cleanWithdrawalCountCashe();
+            }
         },
     },
 };
