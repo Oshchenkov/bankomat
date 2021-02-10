@@ -5,8 +5,8 @@
                 ><b-table
                     striped
                     hover
-                    :items="items"
-                    :fields="fields"
+                    :items="getItemsSum"
+                    :fields="getFieldsSum"
                 ></b-table
             ></b-col>
         </b-row>
@@ -31,6 +31,29 @@ export default {
             default() {
                 return [];
             },
+        },
+    },
+
+    computed: {
+        getItemsSum() {
+            return this.items.map((item) => {
+                return {
+                    id: item.id,
+                    value: item.value,
+                    count: item.count,
+                    sum: +item.value * +item.count,
+                };
+            });
+        },
+
+        getFieldsSum() {
+            const compFields = this.fields;
+            compFields.push({
+                key: 'sum',
+                label: 'Current sum',
+                sortable: true,
+            });
+            return compFields;
         },
     },
 };

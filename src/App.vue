@@ -31,7 +31,6 @@ export default {
     data() {
         return {
             inputCurrencyValue: null,
-            // Note 'isActive' is left out and will not appear in the rendered table
             fields: [
                 {
                     key: 'value',
@@ -41,7 +40,6 @@ export default {
                     key: 'count',
                     label: 'Current count',
                     sortable: true,
-                    // variant: 'success',
                 },
             ],
 
