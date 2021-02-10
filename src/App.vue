@@ -7,11 +7,6 @@
         </b-container>
         <CurrencyTable :items="currencyData" :fields="fields" />
         <FormBlock v-model="inputCurrencyValue" @submit="checkCashWithdrawal" />
-
-        <div class="error" v-show="hasError">
-            Error
-        </div>
-        <ToastAlerts />
     </div>
 </template>
 
@@ -22,7 +17,6 @@ import 'bootstrap/dist/css/bootstrap.css';
 import 'bootstrap-vue/dist/bootstrap-vue.css';
 import CurrencyTable from './components/CurrencyTable';
 import FormBlock from './components/FormBlock';
-import ToastAlerts from './components/ToastAlerts';
 
 Vue.use(BootstrapVue);
 
@@ -32,13 +26,11 @@ export default {
     components: {
         CurrencyTable,
         FormBlock,
-        ToastAlerts,
     },
 
     data() {
         return {
             inputCurrencyValue: null,
-            hasError: null,
             // Note 'isActive' is left out and will not appear in the rendered table
             fields: [
                 {
@@ -96,11 +88,9 @@ export default {
     methods: {
         checkCashWithdrawal() {
             if (Number.isInteger(+this.inputCurrencyValue)) {
-                this.toggleError(false);
-
                 this.calculateWithdrawalCount();
             } else {
-                this.toggleError(true);
+                this.makeToast({ variant: 'danger', msg: 'Wrong input' });
             }
         },
         calculateWithdrawalCount() {
@@ -113,7 +103,7 @@ export default {
                             this.currencyData[i].value
                     );
 
-                    if (resCount <= this.currencyData[i].count) {
+                    if (resCount <= this.currencyData[i].count && resCount) {
                         this.updateOperationCurrentSum({
                             count: resCount,
                             value: this.currencyData[i].value,
@@ -126,9 +116,10 @@ export default {
                         });
                     } else if (resCount == 0) {
                         if (this.operationCashe.currentSum) {
+                            continue;
+                        } else {
                             break;
                         }
-                        continue;
                     } else {
                         this.updateOperationCurrentSum({
                             count: this.currencyData[i].count,
@@ -176,20 +167,44 @@ export default {
             this.operationCashe.operationCounts = [];
         },
 
-        toggleError(status = false) {
-            this.hasError = status;
-        },
-
         showWithdrawalResult() {
             if (
                 this.operationCashe.operationCounts.length &&
                 !this.operationCashe.currentSum
             ) {
+                this.makeToast({
+                    variant: 'success',
+                    msg: this.operationCashe.operationCounts,
+                });
                 this.subtractWithdrawalCount();
             } else {
-                this.toggleError(true);
+                this.makeToast({
+                    variant: 'danger',
+                    msg:
+                        'Not enough money or not the necessary bills to issue without balance',
+                });
                 this.cleanWithdrawalCountCashe();
             }
+        },
+
+        makeToast({ append = false, variant = null, msg = 'default' }) {
+            let toastBody = '';
+
+            if (typeof msg == 'object') {
+                for (const key in Object.entries(msg)) {
+                    toastBody += `Currency: ${msg[key].value} (count: ${msg[key].countWithdrawal}) | `;
+                }
+            } else {
+                toastBody = msg;
+            }
+
+            this.$bvToast.toast(`${toastBody}`, {
+                title: `Variant ${variant || 'default'}`,
+                autoHideDelay: 10000,
+                appendToast: append,
+                variant: variant,
+                solid: true,
+            });
         },
     },
 };
