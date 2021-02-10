@@ -197,7 +197,7 @@ export default {
             }
 
             this.$bvToast.toast(`${toastBody}`, {
-                title: `Variant ${variant || 'default'}`,
+                title: `Withdrawal ${variant}`,
                 autoHideDelay: 10000,
                 appendToast: append,
                 variant: variant,
