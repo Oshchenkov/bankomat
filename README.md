@@ -18,11 +18,6 @@ npm run serve
 npm run build
 ```
 
-### Lints and fixes files
-```
-npm run lint
-```
-
 ## Task
 
 ### Разработайте алгоритм и интерфейсы получения денег в банкомате в виде SPA
